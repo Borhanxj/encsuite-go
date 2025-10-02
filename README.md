@@ -1,4 +1,5 @@
 #Encryption Suite in Go
+
 A structured, step-by-step implementation of classic and modern cryptographic techniques in Go.
 Includes:
 
