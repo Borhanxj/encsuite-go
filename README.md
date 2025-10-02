@@ -1,14 +1,17 @@
-#Encryption Suite in Go
+# Encryption Suite in Go
 
 A structured, step-by-step implementation of classic and modern cryptographic techniques in Go.
-Includes:
 
-- Symmetric and asymmetric encryption algorithms
+## Features
 
-- Key generation (with QRNG integration planned)
+- **Symmetric and asymmetric encryption algorithms**
+- **Key generation** (with QRNG integration planned)
+- **Secure hashing functions**
+- **Clean, modular, and professional code organization**
 
-- Secure hashing functions
+## Project Goal
 
-- Clean, modular, and professional code organization
+The goal of this project is to build a comprehensive yet educational cryptography toolkit,  
+with each feature developed in isolated **micro-steps** for clarity and reproducibility.
 
-The goal of this project is to build a comprehensive yet educational cryptography toolkit, with each feature developed in isolated micro-steps for clarity and reproducibility.
+---
