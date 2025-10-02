@@ -1,2 +1,13 @@
-# encsuite-go
-Go-based cryptography suite for classical and modern algorithms, built with modular design.
+#Encryption Suite in Go
+A structured, step-by-step implementation of classic and modern cryptographic techniques in Go.
+Includes:
+
+- Symmetric and asymmetric encryption algorithms
+
+- Key generation (with QRNG integration planned)
+
+- Secure hashing functions
+
+- Clean, modular, and professional code organization
+
+The goal of this project is to build a comprehensive yet educational cryptography toolkit, with each feature developed in isolated micro-steps for clarity and reproducibility.
