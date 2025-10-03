@@ -1,11 +1,351 @@
 <!doctype html>
-<html>
-
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>encsuite-go</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>encsuite-go • Crypto Playground</title>
+  <style>
+    :root {
+      --bg1: #0f1226;  /* deep indigo */
+      --bg2: #121a38;  /* navy */
+      --fg:  #e8eaf6;  /* soft white */
+      --muted: #aeb6cf;
+      --accent: #7c4dff; /* purple */
+      --accent2:#00e5ff; /* cyan */
+      --card: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.12);
+      --ok: #00d4a6;
+      --warn: #ffb300;
+      --err: #ff6e6e;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--fg);
+      background: radial-gradient(1200px 800px at 10% -10%, #1b1f3b 0%, transparent 70%),
+                  radial-gradient(1000px 700px at 110% 0%, #0a2540 0%, transparent 75%),
+                  linear-gradient(160deg, var(--bg1), var(--bg2));
+    }
+    .wrap { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+    .title {
+      display:flex; align-items:center; gap:14px; margin-bottom:18px;
+    }
+    .title h1 { margin:0; font-size: 28px; letter-spacing: 0.4px; font-weight: 700; }
+    .badge { padding: 4px 10px; border:1px solid var(--border); border-radius: 999px; color: var(--muted); font-size: 12px; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 880px){ .grid { grid-template-columns: 1.2fr 1fr; } }
+
+    label { display:block; font-size: 12px; color: var(--muted); margin-bottom:6px; }
+    select, input[type="number"], textarea, button {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      outline: none;
+      transition: border .15s ease, transform .06s ease;
+    }
+    select:focus, input:focus, textarea:focus { border-color: var(--accent2); }
+    textarea { min-height: 120px; resize: vertical; }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .row-3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .btn { cursor: pointer; font-weight: 600; letter-spacing: .2px; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; }
+    .btn.ghost { background: transparent; border: 1px solid var(--border); }
+
+    .pill { display:inline-flex; align-items:center; gap:8px; font-size:12px; padding:6px 10px; border-radius: 999px; border:1px solid var(--border); color: var(--muted); }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+    .output { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background: rgba(0,0,0,0.35); padding: 12px; border-radius: 12px; border:1px solid var(--border); white-space: pre-wrap; word-break: break-word; min-height: 60px; }
+
+    .footer { margin-top: 18px; display:flex; justify-content: space-between; align-items:center; color: var(--muted); font-size: 12px; }
+    .link { color: var(--accent2); text-decoration: none; }
+    .link:hover { text-decoration: underline; }
+  </style>
 </head>
 <body>
-    Test
+  <div class="wrap">
+    <div class="title">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 2l7 4v6c0 5-7 10-7 10S5 17 5 12V6l7-4z" stroke="url(#g)" stroke-width="1.5" fill="none"/><defs><linearGradient id="g" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#7c4dff"/><stop offset="1" stop-color="#00e5ff"/></linearGradient></defs></svg>
+      <h1>encsuite‑go • Crypto Playground</h1>
+      <span class="badge">alpha • static UI</span>
+    </div>
+
+    <div class="card grid">
+      <div>
+        <div class="row">
+          <div>
+            <label>Section</label>
+            <select id="section">
+              <option value="encryption">Encryption</option>
+              <option value="hashing" disabled>Hashing (soon)</option>
+              <option value="kdf" disabled>KDFs (soon)</option>
+            </select>
+          </div>
+          <div>
+            <label>Algorithm</label>
+            <select id="algorithm">
+              <option value="caesar">Caesar (shift)</option>
+              <option value="affine">Affine (a·x + b)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <label>Plaintext / Ciphertext</label>
+          <textarea id="inputText" placeholder="Type your text here..."></textarea>
+        </div>
+
+        <div id="keyFields" style="margin-top:14px;"></div>
+
+        <div class="row" style="margin-top:14px;">
+          <button id="btnEncrypt" class="btn primary">Encrypt</button>
+          <button id="btnDecrypt" class="btn ghost">Decrypt</button>
+        </div>
+
+        <div class="hint">Tip: Non-letters are left as-is. Caesar supports both cases. Affine requires <span class="pill">gcd(a,26)=1</span>.</div>
+      </div>
+
+      <div>
+        <label>Output</label>
+        <div id="output" class="output"></div>
+        <div class="row" style="margin-top:12px;">
+          <button id="btnCopy" class="btn ghost">Copy</button>
+          <button id="btnClear" class="btn ghost">Clear</button>
+        </div>
+        <div class="hint" id="status"></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>
+        <span class="pill">RNG: CSPRNG (browser)</span>
+        <span class="pill">QRNG: coming soon</span>
+      </div>
+      <a class="link" href="https://github.com/borhanxj/encsuite-go" target="_blank" rel="noopener">GitHub repo</a>
+    </div>
+  </div>
+
+  <script>
+    // ===== Helper Math =====
+    const mod = (n, m) => ((n % m) + m) % m;
+    const A = 'A'.charCodeAt(0), Z = 'Z'.charCodeAt(0), a0 = 'a'.charCodeAt(0), z0 = 'z'.charCodeAt(0);
+
+    function isUpper(ch){ const c=ch.charCodeAt(0); return c>=A && c<=Z; }
+    function isLower(ch){ const c=ch.charCodeAt(0); return c>=a0 && c<=z0; }
+
+    function caesarEncrypt(text, k){
+      const kk = mod(k, 26);
+      let out = '';
+      for (let i=0;i<text.length;i++){
+        const ch = text[i];
+        if (isUpper(ch)) out += String.fromCharCode(A + mod((ch.charCodeAt(0)-A)+kk,26));
+        else if (isLower(ch)) out += String.fromCharCode(a0 + mod((ch.charCodeAt(0)-a0)+kk,26));
+        else out += ch;
+      }
+      return out;
+    }
+    const caesarDecrypt = (text, k) => caesarEncrypt(text, -k);
+
+    function egcd(a, b){
+      // returns [g, x, y] with g=gcd(a,b) and ax+by=g
+      let x=1, y=0, x1=0, y1=1;
+      while (b !== 0){
+        const q = Math.floor(a/b);
+        [a, b] = [b, a - q*b];
+        [x, x1] = [x1, x - q*x1];
+        [y, y1] = [y1, y - q*y1];
+      }
+      return [a, x, y];
+    }
+    function modInverse(a, m){
+      a = mod(a, m);
+      const [g, x] = egcd(a, m);
+      if (g !== 1) return null;
+      return mod(x, m);
+    }
+
+    function affineEncrypt(text, Akey, Bkey){
+      const aInvCheck = egcd(mod(Akey,26), 26)[0];
+      if (aInvCheck !== 1) throw new Error('Invalid a: gcd(a,26) != 1');
+      let out='';
+      for (let i=0;i<text.length;i++){
+        const ch=text[i];
+        if (isUpper(ch)){
+          const x = ch.charCodeAt(0)-A;
+          out += String.fromCharCode(A + mod(Akey*x + Bkey, 26));
+        } else if (isLower(ch)){
+          const x = ch.charCodeAt(0)-a0;
+          out += String.fromCharCode(a0 + mod(Akey*x + Bkey, 26));
+        } else out += ch;
+      }
+      return out;
+    }
+    function affineDecrypt(text, Akey, Bkey){
+      const aInv = modInverse(Akey, 26);
+      if (aInv === null) throw new Error('Invalid a: no modular inverse mod 26');
+      let out='';
+      for (let i=0;i<text.length;i++){
+        const ch=text[i];
+        if (isUpper(ch)){
+          const y = ch.charCodeAt(0)-A;
+          out += String.fromCharCode(A + mod(aInv*(y - Bkey), 26));
+        } else if (isLower(ch)){
+          const y = ch.charCodeAt(0)-a0;
+          out += String.fromCharCode(a0 + mod(aInv*(y - Bkey), 26));
+        } else out += ch;
+      }
+      return out;
+    }
+
+    // ===== RNG (CSPRNG via Web Crypto) =====
+    function randIntN(n){
+      if (!window.crypto || !window.crypto.getRandomValues) {
+        // Fallback (not cryptographic):
+        return Math.floor(Math.random()*n);
+      }
+      const buf = new Uint32Array(1);
+      let x;
+      // Rejection sampling to avoid modulo bias
+      const max = Math.floor(0xFFFFFFFF / n) * n;
+      do {
+        window.crypto.getRandomValues(buf);
+        x = buf[0];
+      } while (x >= max);
+      return x % n;
+    }
+    function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ [a,b]=[b,a%b]; } return a; }
+
+    // ===== UI Wiring =====
+    const sectionEl = document.getElementById('section');
+    const algoEl = document.getElementById('algorithm');
+    const keyFields = document.getElementById('keyFields');
+    const inputText = document.getElementById('inputText');
+    const outEl = document.getElementById('output');
+    const statusEl = document.getElementById('status');
+    const btnEncrypt = document.getElementById('btnEncrypt');
+    const btnDecrypt = document.getElementById('btnDecrypt');
+    const btnCopy = document.getElementById('btnCopy');
+    const btnClear = document.getElementById('btnClear');
+
+    function renderKeys(){
+      const algo = algoEl.value;
+      if (algo === 'caesar'){
+        keyFields.innerHTML = `
+          <div class="row">
+            <div>
+              <label>Shift (k ∈ 0..25)</label>
+              <input id="kShift" type="number" min="0" max="25" value="3" />
+              <div class="row" style="margin-top:10px;">
+                <button id="btnRandCaesar" class="btn ghost">Random (CSPRNG)</button>
+                <button class="btn ghost" disabled>Quantum (soon)</button>
+              </div>
+            </div>
+            <div></div>
+          </div>
+        `;
+        document.getElementById('btnRandCaesar').onclick = () => {
+          const k = randIntN(26);
+          document.getElementById('kShift').value = k;
+          toast(`Caesar key generated: k=${k}`);
+        };
+      } else if (algo === 'affine'){
+        keyFields.innerHTML = `
+          <div class="row-3">
+            <div>
+              <label>a (coprime with 26)</label>
+              <input id="aKey" type="number" min="1" max="25" value="5" />
+            </div>
+            <div>
+              <label>b (0..25)</label>
+              <input id="bKey" type="number" min="0" max="25" value="8" />
+            </div>
+            <div style="align-self:end;">
+              <div class="row">
+                <button id="btnRandAffine" class="btn ghost">Random (CSPRNG)</button>
+                <button class="btn ghost" disabled>Quantum (soon)</button>
+              </div>
+            </div>
+          </div>
+          <div class="hint">Valid a values: 1,3,5,7,9,11,15,17,19,21,23,25</div>
+        `;
+        document.getElementById('btnRandAffine').onclick = () => {
+          const validA = [1,3,5,7,9,11,15,17,19,21,23,25];
+          const a = validA[randIntN(validA.length)];
+          const b = randIntN(26);
+          document.getElementById('aKey').value = a;
+          document.getElementById('bKey').value = b;
+          toast(`Affine keys generated: a=${a}, b=${b}`);
+        };
+      }
+    }
+
+    function toast(msg){
+      statusEl.textContent = msg;
+      statusEl.style.color = 'var(--muted)';
+      setTimeout(()=>{ statusEl.textContent=''; }, 3000);
+    }
+    function warn(msg){ statusEl.textContent = msg; statusEl.style.color = 'var(--warn)'; }
+    function error(msg){ statusEl.textContent = msg; statusEl.style.color = 'var(--err)'; }
+
+    btnEncrypt.onclick = () => {
+      try {
+        const algo = algoEl.value;
+        const text = inputText.value || '';
+        if (algo === 'caesar'){
+          const k = Number(document.getElementById('kShift').value || 0);
+          outEl.textContent = caesarEncrypt(text, k);
+          toast('Encrypted with Caesar');
+        } else if (algo === 'affine'){
+          const a = Number(document.getElementById('aKey').value || 0);
+          const b = Number(document.getElementById('bKey').value || 0);
+          if (gcd(a,26)!==1) return warn('Invalid a: gcd(a,26) must equal 1');
+          outEl.textContent = affineEncrypt(text, a, b);
+          toast('Encrypted with Affine');
+        }
+      } catch(e){ error(e.message || 'Error'); }
+    };
+
+    btnDecrypt.onclick = () => {
+      try {
+        const algo = algoEl.value;
+        const text = inputText.value || '';
+        if (algo === 'caesar'){
+          const k = Number(document.getElementById('kShift').value || 0);
+          outEl.textContent = caesarDecrypt(text, k);
+          toast('Decrypted with Caesar');
+        } else if (algo === 'affine'){
+          const a = Number(document.getElementById('aKey').value || 0);
+          const b = Number(document.getElementById('bKey').value || 0);
+          if (gcd(a,26)!==1) return warn('Invalid a: gcd(a,26) must equal 1');
+          outEl.textContent = affineDecrypt(text, a, b);
+          toast('Decrypted with Affine');
+        }
+      } catch(e){ error(e.message || 'Error'); }
+    };
+
+    btnCopy.onclick = async () => {
+      try { await navigator.clipboard.writeText(outEl.textContent || ''); toast('Copied to clipboard'); }
+      catch { warn('Clipboard not available'); }
+    };
+    btnClear.onclick = () => { inputText.value=''; outEl.textContent=''; };
+
+    algoEl.onchange = renderKeys;
+    sectionEl.onchange = () => {
+      if (sectionEl.value !== 'encryption') warn('Only Encryption is active in this alpha');
+    };
+
+    // initial render
+    renderKeys();
+  </script>
 </body>
 </html>
